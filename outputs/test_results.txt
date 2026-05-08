@@ -1,0 +1,47 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-9.0.3, pluggy-1.6.0 -- D:\Vinuniversity\Full 15 slide\Track 3-AI aplication\Day 7\Phase2-Track3-Day7-DPO-ORPO-Alignment\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: D:\Vinuniversity\Full 15 slide\Track 3-AI aplication\Day 7\Phase2-Track3-Day7-DPO-ORPO-Alignment
+configfile: pyproject.toml
+plugins: anyio-4.13.0
+collecting ... collected 37 items
+
+tests/test_comparison.py::test_comparison_runs PASSED                    [  2%]
+tests/test_comparison.py::test_comparison_has_loss_history PASSED        [  5%]
+tests/test_comparison.py::test_comparison_analysis PASSED                [  8%]
+tests/test_data.py::test_load_sample_data PASSED                         [ 10%]
+tests/test_data.py::test_split_returns_all_examples PASSED               [ 13%]
+tests/test_data.py::test_split_no_leakage PASSED                         [ 16%]
+tests/test_data.py::test_split_deterministic PASSED                      [ 18%]
+tests/test_data.py::test_split_different_seeds PASSED                    [ 21%]
+tests/test_data.py::test_load_diagnostics PASSED                         [ 24%]
+tests/test_data.py::test_split_empty PASSED                              [ 27%]
+tests/test_data.py::test_schema_whitespace_robust PASSED                 [ 29%]
+tests/test_data.py::test_schema_case_robust PASSED                       [ 32%]
+tests/test_evaluate.py::TestPairwiseAccuracy::test_perfect_accuracy PASSED [ 35%]
+tests/test_evaluate.py::TestPairwiseAccuracy::test_zero_accuracy PASSED  [ 37%]
+tests/test_evaluate.py::TestPairwiseAccuracy::test_ties PASSED           [ 40%]
+tests/test_evaluate.py::TestPairwiseAccuracy::test_empty PASSED          [ 43%]
+tests/test_evaluate.py::TestPairwiseAccuracy::test_length_mismatch PASSED [ 45%]
+tests/test_evaluate.py::TestScorers::test_length_scorer PASSED           [ 48%]
+tests/test_evaluate.py::TestScorers::test_keyword_overlap PASSED         [ 51%]
+tests/test_evaluate.py::TestScorers::test_combined_scorer PASSED         [ 54%]
+tests/test_evaluate.py::TestScorers::test_score_examples PASSED          [ 56%]
+tests/test_evaluate.py::TestRewardMetrics::test_reward_margin PASSED     [ 59%]
+tests/test_evaluate.py::TestRewardMetrics::test_reward_std PASSED        [ 62%]
+tests/test_evaluate.py::TestRewardMetrics::test_reward_std_nonzero PASSED [ 64%]
+tests/test_losses.py::TestDPOLoss::test_dpo_loss_basic PASSED            [ 67%]
+tests/test_losses.py::TestDPOLoss::test_dpo_loss_positive PASSED         [ 70%]
+tests/test_losses.py::TestDPOLoss::test_dpo_loss_decreases_with_margin PASSED [ 72%]
+tests/test_losses.py::TestDPOLoss::test_dpo_loss_numerical_stability PASSED [ 75%]
+tests/test_losses.py::TestDPOLoss::test_dpo_loss_batch PASSED            [ 78%]
+tests/test_losses.py::TestORPOLoss::test_orpo_loss_basic PASSED          [ 81%]
+tests/test_losses.py::TestORPOLoss::test_orpo_loss_sft_component PASSED  [ 83%]
+tests/test_losses.py::TestORPOLoss::test_orpo_loss_preference_component PASSED [ 86%]
+tests/test_losses.py::TestORPOLoss::test_orpo_loss_numerical_stability PASSED [ 89%]
+tests/test_safety.py::test_safety_regression_safe PASSED                 [ 91%]
+tests/test_safety.py::test_safety_regression_unsafe PASSED               [ 94%]
+tests/test_safety.py::test_safety_score_categories PASSED                [ 97%]
+tests/test_safety.py::test_safety_score_structure PASSED                 [100%]
+
+============================= 37 passed in 0.49s ==============================

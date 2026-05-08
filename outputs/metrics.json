@@ -1,0 +1,13 @@
+{
+  "accuracy": 0.9583,
+  "chosen_score_std": 0.0804,
+  "dataset_size": 24,
+  "loss_count": 1,
+  "rejected_score_std": 0.0976,
+  "reward_margin": 0.0589,
+  "scorer": "combined",
+  "tie_count": 0,
+  "tie_rate": 0.0,
+  "total": 24,
+  "win_count": 23
+}
