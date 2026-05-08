@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preference Alignment Lab — DPO & ORPO Dashboard</title>
+  <meta name="description" content="Interactive dashboard for DPO and ORPO preference alignment experiments">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">⚗️</div>
+        <div>
+          <h1>Preference Alignment Lab</h1>
+          <span>DPO & ORPO Interactive Dashboard</span>
+        </div>
+      </div>
+      <div class="header-status">
+        <div class="status-badge">
+          <span class="status-dot"></span>
+          <span id="testStatus">37/37 Tests Passed</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <button class="nav-btn active" data-panel="dataset"><span class="emoji">📊</span> Dataset Explorer</button>
+      <button class="nav-btn" data-panel="loss"><span class="emoji">⚡</span> Loss Lab</button>
+      <button class="nav-btn" data-panel="training"><span class="emoji">🏋️</span> Training Simulator</button>
+      <button class="nav-btn" data-panel="evaluation"><span class="emoji">📈</span> Evaluation</button>
+      <button class="nav-btn" data-panel="comparison"><span class="emoji">🔬</span> DPO vs ORPO</button>
+      <button class="nav-btn" data-panel="safety"><span class="emoji">🛡️</span> Safety Console</button>
+    </div>
+  </nav>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Main Content -->
+  <main class="main">
+
+    <!-- ====== Panel 1: Dataset Explorer ====== -->
+    <section class="panel active" id="panel-dataset">
+      <div class="panel-header">
+        <h2 class="panel-title">📊 Dataset Explorer</h2>
+        <p class="panel-desc">Browse preference pairs, validation diagnostics, PII checks, and train/val split</p>
+      </div>
+
+      <div class="grid-4" id="datasetStats">
+        <div class="stat-card"><div class="stat-value" id="ds-total">—</div><div class="stat-label">Total Examples</div></div>
+        <div class="stat-card"><div class="stat-value green" id="ds-valid">—</div><div class="stat-label">Valid</div></div>
+        <div class="stat-card"><div class="stat-value amber" id="ds-warnings">—</div><div class="stat-label">Warnings</div></div>
+        <div class="stat-card"><div class="stat-value red" id="ds-errors">—</div><div class="stat-label">Errors</div></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><span class="icon">📋</span> Preference Pairs</div>
+            <button class="btn btn-primary" onclick="loadDataset()">Load Dataset</button>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead><tr><th>#</th><th>Prompt</th><th>Chosen</th><th>Rejected</th><th>Domain</th></tr></thead>
+              <tbody id="datasetTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><span class="icon">✂️</span> Train/Val Split</div>
+            <button class="btn btn-secondary" onclick="loadSplit()">Compute Split</button>
+          </div>
+          <div class="controls">
+            <div class="input-group">
+              <label>Val Ratio: <span class="range-value" id="splitRatioVal">0.20</span></label>
+              <input type="range" id="splitRatio" min="0.1" max="0.5" step="0.05" value="0.2"
+                     oninput="document.getElementById('splitRatioVal').textContent=this.value">
+            </div>
+            <div class="input-group">
+              <label>Seed: <span class="range-value" id="splitSeedVal">42</span></label>
+              <input type="range" id="splitSeed" min="1" max="100" step="1" value="42"
+                     oninput="document.getElementById('splitSeedVal').textContent=this.value">
+            </div>
+          </div>
+          <div id="splitResults" class="loading-overlay">Click "Compute Split" to view</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== Panel 2: Loss Lab ====== -->
+    <section class="panel" id="panel-loss">
+      <div class="panel-header">
+        <h2 class="panel-title">⚡ Loss Function Laboratory</h2>
+        <p class="panel-desc">Interactive playground for DPO & ORPO loss computation with real-time formula visualization</p>
+      </div>
+
+      <div class="grid-2">
+        <!-- DPO Loss -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><span class="icon">🎯</span> DPO Loss</div>
+            <span class="badge badge-info">Direct Preference Optimization</span>
+          </div>
+          <div class="formula">
+            L_DPO = -E[log σ(β · (log π(y_w|x)/π(y_l|x) - log π_ref(y_w|x)/π_ref(y_l|x)))]
+          </div>
+          <div class="controls" style="margin-top:16px">
+            <div class="input-group">
+              <label>β (beta): <span class="range-value" id="dpoBetaVal">0.10</span></label>
+              <input type="range" id="dpoBeta" min="0.01" max="1.0" step="0.01" value="0.1"
+                     oninput="document.getElementById('dpoBetaVal').textContent=parseFloat(this.value).toFixed(2); computeDPO()">
+            </div>
+            <div class="input-group">
+              <label>π(y_w): <span class="range-value" id="dpoPCVal">-0.50</span></label>
+              <input type="range" id="dpoPC" min="-5" max="-0.01" step="0.01" value="-0.5"
+                     oninput="document.getElementById('dpoPCVal').textContent=parseFloat(this.value).toFixed(2); computeDPO()">
+            </div>
+            <div class="input-group">
+              <label>π(y_l): <span class="range-value" id="dpoPRVal">-1.50</span></label>
+              <input type="range" id="dpoPR" min="-5" max="-0.01" step="0.01" value="-1.5"
+                     oninput="document.getElementById('dpoPRVal').textContent=parseFloat(this.value).toFixed(2); computeDPO()">
+            </div>
+            <div class="input-group">
+              <label>π_ref(y_w): <span class="range-value" id="dpoRCVal">-0.60</span></label>
+              <input type="range" id="dpoRC" min="-5" max="-0.01" step="0.01" value="-0.6"
+                     oninput="document.getElementById('dpoRCVal').textContent=parseFloat(this.value).toFixed(2); computeDPO()">
+            </div>
+            <div class="input-group">
+              <label>π_ref(y_l): <span class="range-value" id="dpoRRVal">-1.00</span></label>
+              <input type="range" id="dpoRR" min="-5" max="-0.01" step="0.01" value="-1.0"
+                     oninput="document.getElementById('dpoRRVal').textContent=parseFloat(this.value).toFixed(2); computeDPO()">
+            </div>
+          </div>
+          <div class="grid-3" id="dpoResults" style="margin-top:16px">
+            <div class="stat-card"><div class="stat-value" id="dpo-loss">—</div><div class="stat-label">Loss</div></div>
+            <div class="stat-card"><div class="stat-value" id="dpo-logits">—</div><div class="stat-label">Logits</div></div>
+            <div class="stat-card"><div class="stat-value" id="dpo-plr">—</div><div class="stat-label">Policy Log Ratio</div></div>
+          </div>
+        </div>
+
+        <!-- ORPO Loss -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><span class="icon">🔄</span> ORPO Loss</div>
+            <span class="badge badge-info">Odds-Ratio Preference Optimization</span>
+          </div>
+          <div class="formula">
+            L_ORPO = L_SFT + λ · E[-log σ(log(odds_chosen / odds_rejected))]
+          </div>
+          <div class="controls" style="margin-top:16px">
+            <div class="input-group">
+              <label>λ (lambda): <span class="range-value" id="orpoLambdaVal">0.10</span></label>
+              <input type="range" id="orpoLambda" min="0.01" max="2.0" step="0.01" value="0.1"
+                     oninput="document.getElementById('orpoLambdaVal').textContent=parseFloat(this.value).toFixed(2); computeORPO()">
+            </div>
+            <div class="input-group">
+              <label>SFT NLL: <span class="range-value" id="orpoSFTVal">1.00</span></label>
+              <input type="range" id="orpoSFT" min="0.1" max="5" step="0.1" value="1.0"
+                     oninput="document.getElementById('orpoSFTVal').textContent=parseFloat(this.value).toFixed(2); computeORPO()">
+            </div>
+            <div class="input-group">
+              <label>Chosen logp: <span class="range-value" id="orpoCVal">-0.50</span></label>
+              <input type="range" id="orpoC" min="-5" max="-0.01" step="0.01" value="-0.5"
+                     oninput="document.getElementById('orpoCVal').textContent=parseFloat(this.value).toFixed(2); computeORPO()">
+            </div>
+            <div class="input-group">
+              <label>Rejected logp: <span class="range-value" id="orpoRVal">-1.50</span></label>
+              <input type="range" id="orpoR" min="-5" max="-0.01" step="0.01" value="-1.5"
+                     oninput="document.getElementById('orpoRVal').textContent=parseFloat(this.value).toFixed(2); computeORPO()">
+            </div>
+          </div>
+          <div class="grid-3" id="orpoResults" style="margin-top:16px">
+            <div class="stat-card"><div class="stat-value" id="orpo-loss">—</div><div class="stat-label">Total Loss</div></div>
+            <div class="stat-card"><div class="stat-value" id="orpo-sft">—</div><div class="stat-label">SFT Component</div></div>
+            <div class="stat-card"><div class="stat-value" id="orpo-pref">—</div><div class="stat-label">Pref Penalty</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== Panel 3: Training Simulator ====== -->
+    <section class="panel" id="panel-training">
+      <div class="panel-header">
+        <h2 class="panel-title">🏋️ Training Simulator</h2>
+        <p class="panel-desc">Run mock DPO/ORPO training and visualize loss convergence curves</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span class="icon">⚙️</span> Training Configuration</div>
+          <button class="btn btn-primary" id="trainBtn" onclick="runTraining()">▶ Start Training</button>
+        </div>
+        <div class="controls">
+          <div class="input-group">
+            <label>Method</label>
+            <select id="trainMethod">
+              <option value="both">Both (DPO + ORPO)</option>
+              <option value="dpo">DPO only</option>
+              <option value="orpo">ORPO only</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>Steps: <span class="range-value" id="trainStepsVal">50</span></label>
+            <input type="range" id="trainSteps" min="10" max="200" step="10" value="50"
+                   oninput="document.getElementById('trainStepsVal').textContent=this.value">
+          </div>
+          <div class="input-group">
+            <label>β: <span class="range-value" id="trainBetaVal">0.10</span></label>
+            <input type="range" id="trainBeta" min="0.01" max="1.0" step="0.01" value="0.1"
+                   oninput="document.getElementById('trainBetaVal').textContent=parseFloat(this.value).toFixed(2)">
+          </div>
+          <div class="input-group">
+            <label>λ: <span class="range-value" id="trainLambdaVal">0.10</span></label>
+            <input type="range" id="trainLambda" min="0.01" max="2.0" step="0.01" value="0.1"
+                   oninput="document.getElementById('trainLambdaVal').textContent=parseFloat(this.value).toFixed(2)">
+          </div>
+          <div class="input-group">
+            <label>Batch Size: <span class="range-value" id="trainBatchVal">4</span></label>
+            <input type="range" id="trainBatch" min="1" max="16" step="1" value="4"
+                   oninput="document.getElementById('trainBatchVal').textContent=this.value">
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-4" id="trainStats" style="display:none">
+        <div class="stat-card"><div class="stat-value" id="train-method">—</div><div class="stat-label">Method(s)</div></div>
+        <div class="stat-card"><div class="stat-value green" id="train-initial">—</div><div class="stat-label">Initial Loss</div></div>
+        <div class="stat-card"><div class="stat-value green" id="train-final">—</div><div class="stat-label">Final Loss</div></div>
+        <div class="stat-card"><div class="stat-value" id="train-time">—</div><div class="stat-label">Time</div></div>
+      </div>
+
+      <div class="card" id="trainChartCard" style="display:none">
+        <div class="card-title"><span class="icon">📉</span> Loss Convergence Curve</div>
+        <div class="chart-container"><canvas id="trainChart"></canvas></div>
+      </div>
+    </section>
+
+    <!-- ====== Panel 4: Evaluation ====== -->
+    <section class="panel" id="panel-evaluation">
+      <div class="panel-header">
+        <h2 class="panel-title">📈 Evaluation Dashboard</h2>
+        <p class="panel-desc">Pairwise accuracy, reward margins, and per-example scoring breakdown</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span class="icon">🎛️</span> Scorer Selection</div>
+          <button class="btn btn-primary" onclick="runEvaluation()">▶ Run Evaluation</button>
+        </div>
+        <div class="controls">
+          <div class="input-group">
+            <label>Scorer</label>
+            <select id="evalScorer">
+              <option value="combined">Combined (Length + Keyword)</option>
+              <option value="length">Length-based</option>
+              <option value="keyword">Keyword Overlap</option>
+              <option value="mock">Mock (all correct)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-4" id="evalStats" style="display:none">
+        <div class="stat-card"><div class="stat-value green" id="eval-accuracy">—</div><div class="stat-label">Pairwise Accuracy</div></div>
+        <div class="stat-card"><div class="stat-value" id="eval-margin">—</div><div class="stat-label">Avg Reward Margin</div></div>
+        <div class="stat-card"><div class="stat-value" id="eval-wins">—</div><div class="stat-label">Wins / Losses / Ties</div></div>
+        <div class="stat-card"><div class="stat-value" id="eval-total">—</div><div class="stat-label">Total Examples</div></div>
+      </div>
+
+      <div class="card" id="evalTableCard" style="display:none">
+        <div class="card-title"><span class="icon">📋</span> Per-Example Breakdown</div>
+        <div class="table-container" style="margin-top:16px">
+          <table>
+            <thead><tr><th>#</th><th>Prompt</th><th>Chosen Score</th><th>Rejected Score</th><th>Margin</th><th>Correct?</th></tr></thead>
+            <tbody id="evalTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== Panel 5: DPO vs ORPO ====== -->
+    <section class="panel" id="panel-comparison">
+      <div class="panel-header">
+        <h2 class="panel-title">🔬 DPO vs ORPO Arena</h2>
+        <p class="panel-desc">Side-by-side comparison with identical settings to determine the winner</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span class="icon">⚔️</span> Battle Configuration</div>
+          <button class="btn btn-primary" onclick="runComparison()">⚔️ Start Battle</button>
+        </div>
+        <div class="controls">
+          <div class="input-group">
+            <label>Steps: <span class="range-value" id="cmpStepsVal">50</span></label>
+            <input type="range" id="cmpSteps" min="10" max="200" step="10" value="50"
+                   oninput="document.getElementById('cmpStepsVal').textContent=this.value">
+          </div>
+          <div class="input-group">
+            <label>β: <span class="range-value" id="cmpBetaVal">0.10</span></label>
+            <input type="range" id="cmpBeta" min="0.01" max="1.0" step="0.01" value="0.1"
+                   oninput="document.getElementById('cmpBetaVal').textContent=parseFloat(this.value).toFixed(2)">
+          </div>
+          <div class="input-group">
+            <label>λ: <span class="range-value" id="cmpLambdaVal">0.10</span></label>
+            <input type="range" id="cmpLambda" min="0.01" max="2.0" step="0.01" value="0.1"
+                   oninput="document.getElementById('cmpLambdaVal').textContent=parseFloat(this.value).toFixed(2)">
+          </div>
+        </div>
+      </div>
+
+      <div id="comparisonWinner" style="display:none; text-align:center; margin:20px 0">
+        <div class="winner-badge" id="winnerBadge">🏆 Winner: —</div>
+      </div>
+
+      <div class="grid-2" id="comparisonStats" style="display:none">
+        <div class="card compare-col dpo">
+          <h3>🎯 DPO</h3>
+          <div class="grid-2">
+            <div class="stat-card"><div class="stat-value" id="cmp-dpo-initial">—</div><div class="stat-label">Initial Loss</div></div>
+            <div class="stat-card"><div class="stat-value green" id="cmp-dpo-final">—</div><div class="stat-label">Final Loss</div></div>
+          </div>
+        </div>
+        <div class="card compare-col orpo">
+          <h3>🔄 ORPO</h3>
+          <div class="grid-2">
+            <div class="stat-card"><div class="stat-value" id="cmp-orpo-initial">—</div><div class="stat-label">Initial Loss</div></div>
+            <div class="stat-card"><div class="stat-value green" id="cmp-orpo-final">—</div><div class="stat-label">Final Loss</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="cmpChartCard" style="display:none">
+        <div class="card-title"><span class="icon">📊</span> Loss Convergence Comparison</div>
+        <div class="chart-container"><canvas id="cmpChart"></canvas></div>
+      </div>
+    </section>
+
+    <!-- ====== Panel 6: Safety Console ====== -->
+    <section class="panel" id="panel-safety">
+      <div class="panel-header">
+        <h2 class="panel-title">🛡️ Safety Regression Console</h2>
+        <p class="panel-desc">Before/after safety comparison using regression prompts from docs/regression_prompts.md</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span class="icon">🧪</span> Run Safety Check</div>
+          <button class="btn btn-primary" onclick="runSafety()">🛡️ Run Regression</button>
+        </div>
+      </div>
+
+      <div class="grid-2" id="safetyOverview" style="display:none">
+        <div class="stat-card">
+          <div class="stat-value red" id="safety-before-score">—</div>
+          <div class="stat-label">Before Training</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value green" id="safety-after-score">—</div>
+          <div class="stat-label">After Training</div>
+        </div>
+      </div>
+
+      <div class="grid-2" id="safetyDetails" style="display:none">
+        <div class="card">
+          <div class="card-title" style="color:var(--accent-red)">❌ Before Training (Unsafe)</div>
+          <div id="safetyBeforeList" style="margin-top:16px"></div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="color:var(--accent-green)">✅ After Training (Safe)</div>
+          <div id="safetyAfterList" style="margin-top:16px"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
